@@ -7,7 +7,6 @@ xauthority_path := $(shell echo $$XAUTHORITY)
 xclock_path := $(shell which xclock)
 xeyes_path := $(shell which xeyes)
 xlogo_path := $(shell which xlogo)
-xcalc_path := $(shell which xcalc)
 
 module:
 	cp usr.manifest.skel usr.manifest
@@ -16,7 +15,6 @@ module:
 	echo '/xclock: $(xclock_path)' >> usr.manifest
 	echo '/xeyes: $(xeyes_path)' >> usr.manifest
 	echo '/xlogo: $(xlogo_path)' >> usr.manifest
-	echo '/xcalc: $(xcalc_path)' >> usr.manifest
 
 clean:
 	rm usr.manifest
