@@ -1,12 +1,10 @@
 .PHONY: module clean
 
-liberation_path := $(shell find /usr/share/fonts -type d -name liberation)
-
 module: usr.manifest
 
 usr.manifest:
 	cp usr.manifest.skel usr.manifest
-	echo '$(liberation_path)/**: $(liberation_path)/**' >> usr.manifest
+	find /usr/share/fonts -type d -name liberation\* | awk '{ printf "%s/**: %s/**\n", $$0, $$0 }' >> usr.manifest
 	grep -il liberation /etc/fonts/conf.d/* | awk '{ printf "%s: %s\n", $$0, $$0 }' >> usr.manifest
 
 clean:
