@@ -8,4 +8,4 @@ usr.manifest:
 	grep -il liberation /etc/fonts/conf.d/* | awk '{ printf "%s: %s\n", $$0, $$0 }' >> usr.manifest
 
 clean:
-	rm usr.manifest
+	rm -f usr.manifest

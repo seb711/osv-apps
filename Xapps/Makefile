@@ -17,4 +17,4 @@ module:
 	echo '/xlogo: $(xlogo_path)' >> usr.manifest
 
 clean:
-	rm usr.manifest
+	rm -f usr.manifest
