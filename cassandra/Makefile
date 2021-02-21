@@ -30,7 +30,7 @@ $(tarball): upstream
 	touch $@
 
 $(jna): upstream
-	cd upstream && wget -c https://maven.java.net/content/repositories/releases/net/java/dev/jna/jna/$(jna_version)/jna-$(jna_version).jar
+	cd upstream && wget -c https://repo1.maven.org/maven2/net/java/dev/jna/jna/$(jna_version)/jna-$(jna_version).jar
 	touch $@
 
 clean:
