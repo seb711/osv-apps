@@ -17,7 +17,7 @@ fio/fio: fio
 
 
 clean:
-	cd fio; $(MAKE) clean
+	if [ -d fio ]; then cd fio && $(MAKE) clean; fi
 
 distclean:
 	rm -rf fio
