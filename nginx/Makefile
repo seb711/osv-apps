@@ -1,4 +1,4 @@
-VERSION=1.19.8
+VERSION=1.19.7
 SOURCE=http://nginx.org/download/nginx-${VERSION}.tar.gz
 CONFIGURE_MODULES=--prefix=/nginx/ --with-debug --without-http_rewrite_module --with-threads --with-http_stub_status_module
 
