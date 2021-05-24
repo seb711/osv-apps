@@ -21,7 +21,7 @@ func main() {
 
 //export GoMain
 func GoMain() {
-	fmt.Println("Go version:", runtime.Version());
+	fmt.Printf("Go version: %s, listening on port 8000 ...\n", runtime.Version());
 	http.HandleFunc("/", hello)
 	http.ListenAndServe(":8000", nil)
 }
