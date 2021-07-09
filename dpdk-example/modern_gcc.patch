@@ -1,0 +1,162 @@
+diff --git a/app/test-pipeline/config.c b/app/test-pipeline/config.c
+index 72e018c..1e76889 100644
+--- a/app/test-pipeline/config.c
++++ b/app/test-pipeline/config.c
+@@ -74,7 +74,7 @@
+ 
+ #include "main.h"
+ 
+-struct app_params app;
++extern struct app_params app;
+ 
+ static const char usage[] = "\n";
+ 
+diff --git a/app/test-pmd/testpmd.h b/app/test-pmd/testpmd.h
+index 389fc24..2615fb7 100644
+--- a/app/test-pmd/testpmd.h
++++ b/app/test-pmd/testpmd.h
+@@ -307,19 +307,19 @@ extern uint32_t bypass_timeout; /**< Store the NIC bypass watchdog timeout */
+  * Store specified sockets on which memory pool to be used by ports
+  * is allocated.
+  */
+-uint8_t port_numa[RTE_MAX_ETHPORTS];
++extern uint8_t port_numa[RTE_MAX_ETHPORTS];
+ 
+ /*
+  * Store specified sockets on which RX ring to be used by ports
+  * is allocated.
+  */
+-uint8_t rxring_numa[RTE_MAX_ETHPORTS];
++extern uint8_t rxring_numa[RTE_MAX_ETHPORTS];
+ 
+ /*
+  * Store specified sockets on which TX ring to be used by ports
+  * is allocated.
+  */
+-uint8_t txring_numa[RTE_MAX_ETHPORTS];
++extern uint8_t txring_numa[RTE_MAX_ETHPORTS];
+ 
+ extern uint8_t socket_num;
+ 
+diff --git a/app/test/Makefile b/app/test/Makefile
+index 4aca77c..4a613a9 100644
+--- a/app/test/Makefile
++++ b/app/test/Makefile
+@@ -122,7 +122,7 @@ SRCS-y += test_common.c
+ SRCS-$(CONFIG_RTE_LIBRTE_IVSHMEM) += test_ivshmem.c
+ 
+ SRCS-$(CONFIG_RTE_LIBRTE_DISTRIBUTOR) += test_distributor.c
+-SRCS-$(CONFIG_RTE_LIBRTE_DISTRIBUTOR) += test_distributor_perf.c
++#SRCS-$(CONFIG_RTE_LIBRTE_DISTRIBUTOR) += test_distributor_perf.c
+ 
+ SRCS-$(CONFIG_RTE_LIBRTE_REORDER) += test_reorder.c
+ 
+diff --git a/app/test/test.h b/app/test/test.h
+index 62eb51d..b6d81a7 100644
+--- a/app/test/test.h
++++ b/app/test/test.h
+@@ -149,7 +149,7 @@ extern const char *prgname;
+ int commands_init(void);
+ 
+ int test_pci(void);
+-int test_pci_run;
++extern int test_pci_run;
+ 
+ int test_mp_secondary(void);
+ 
+diff --git a/lib/librte_eal/osvapp/eal/Makefile b/lib/librte_eal/osvapp/eal/Makefile
+index 571e04c..84c7a65 100644
+--- a/lib/librte_eal/osvapp/eal/Makefile
++++ b/lib/librte_eal/osvapp/eal/Makefile
+@@ -39,6 +39,8 @@ LIBABIVER := 1
+ 
+ VPATH += $(RTE_SDK)/lib/librte_eal/common
+ 
++CXX_INCLUDES = $(shell $(CXX) -E -xc++ - -v </dev/null 2>&1 | awk '/^End/ {exit} /^ .*c\+\+/ {print "-isystem" $$0}')
++
+ INC_FLAGS := -I$(SRCDIR)/include
+ INC_FLAGS += -I$(RTE_SDK)/lib/librte_eal/common
+ INC_FLAGS += -I$(RTE_SDK)/lib/librte_eal/common/include
+@@ -50,10 +52,16 @@ INC_FLAGS += -I$(RTE_SDK)/lib/librte_pmd_ring
+ INC_FLAGS += -I$(RTE_SDK)/lib/librte_pmd_pcap
+ INC_FLAGS += -I$(RTE_SDK)/lib/librte_pmd_af_packet
+ INC_FLAGS += -I$(RTE_SDK)/lib/librte_pmd_xenvirt
+-INC_FLAGS += -I$(OSV_SDK)
+ INC_FLAGS += -I$(OSV_SDK)/arch/x64
+-INC_FLAGS += -I$(OSV_SDK)/arch/common
++INC_FLAGS += -I$(OSV_SDK)
+ INC_FLAGS += -I$(OSV_SDK)/include
++INC_FLAGS += -I$(OSV_SDK)/arch/common
++INC_FLAGS += -isystem $(OSV_SDK)/include/glibc-compat
++INC_FLAGS += $(CXX_INCLUDES)
++INC_FLAGS += -isystem $(OSV_SDK)/include/api
++INC_FLAGS += -isystem $(OSV_SDK)/include/api/x64
++INC_FLAGS += -isystem $(OSV_SDK)/build/release.x64/gen/include
++INC_FLAGS += -isystem $(OSV_SDK)/include/osv
+ 
+ CFLAGS += $(INC_FLAGS) $(WERROR_FLAGS) -O3
+ CXXFLAGS += $(INC_FLAGS) -std=gnu++11 -O3
+@@ -88,6 +96,7 @@ SRCS-$(CONFIG_RTE_LIBRTE_EAL_OSVAPP) += eal_common_options.c
+ SRCS-$(CONFIG_RTE_LIBRTE_EAL_OSVAPP) += eal_common_thread.c
+ 
+ CFLAGS_eal.o := -D_GNU_SOURCE
++CFLAGS_eal_alarm.o := -D_GNU_SOURCE
+ CFLAGS_eal_lcore.o := -D_GNU_SOURCE
+ CFLAGS_eal_thread.o := -D_GNU_SOURCE
+ CFLAGS_eal_log.o := -D_GNU_SOURCE
+@@ -97,6 +106,11 @@ CFLAGS_eal_pci.o := -D_GNU_SOURCE
+ CFLAGS_eal_common_whitelist.o := -D_GNU_SOURCE
+ CFLAGS_eal_common_options.o := -D_GNU_SOURCE
+ CFLAGS_eal_common_thread.o := -D_GNU_SOURCE
++CFLAGS_eal_common_memzone.o := -D_GNU_SOURCE
++CFLAGS_eal_common_launch.o := -D_GNU_SOURCE
++CFLAGS_eal_common_memory.o := -D_GNU_SOURCE
++CFLAGS_eal_common_tailqs.o := -D_GNU_SOURCE
++CFLAGS_eal_common_options.o := -D_GNU_SOURCE
+ 
+ # workaround for a gcc bug with noreturn attribute
+ # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=12603
+diff --git a/mk/toolchain/gcc/rte.toolchain-compat.mk b/mk/toolchain/gcc/rte.toolchain-compat.mk
+index 05aa37f..2686115 100644
+--- a/mk/toolchain/gcc/rte.toolchain-compat.mk
++++ b/mk/toolchain/gcc/rte.toolchain-compat.mk
+@@ -38,7 +38,11 @@
+ 
+ #find out GCC version
+ 
+-GCC_VERSION = $(subst .,,$(shell $(CC) -dumpversion | cut -f1-2 -d.))
++ifeq ($(shell $(CC) -dumpfullversion 2>/dev/null && echo 1),)
++	GCC_VERSION = $(subst .,,$(shell $(CC) -dumpversion | cut -f1-2 -d.))
++else
++	GCC_VERSION = $(subst .,,$(shell $(CC) -dumpfullversion | cut -f1-2 -d.))
++endif
+ 
+ # if GCC is older than 4.x
+ ifeq ($(shell test $(GCC_VERSION) -lt 40 && echo 1), 1)
+@@ -85,3 +89,26 @@ else
+ 	endif
+ endif
+ 
++#Disable these warnings for all gcc versions
++MACHINE_CFLAGS += -Wno-unused-value -Wno-strict-aliasing
++
++#End then for the specific version (this has not been tested for each version though)
++ifeq ($(shell test $(GCC_VERSION) -gt 49 && echo 1), 1) #5.x.x
++	MACHINE_CFLAGS += -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-sizeof-pointer-memaccess
++endif
++
++ifeq ($(shell test $(GCC_VERSION) -gt 59 && echo 1), 1) #6.x.x
++	MACHINE_CFLAGS += -Wno-shift-negative-value -Wno-misleading-indentation
++endif
++
++ifeq ($(shell test $(GCC_VERSION) -gt 69 && echo 1), 1) #7.x.x
++	MACHINE_CFLAGS += -Wno-implicit-fallthrough -Wno-stringop-overflow -Wno-format-truncation
++endif
++
++ifeq ($(shell test $(GCC_VERSION) -gt 79 && echo 1), 1) #8.x.x
++	MACHINE_CFLAGS += -Wno-cast-function-type
++endif
++
++ifeq ($(shell test $(GCC_VERSION) -gt 89 && echo 1), 1) #9.x.x
++	MACHINE_CFLAGS += -Wno-address-of-packed-member
++endif
