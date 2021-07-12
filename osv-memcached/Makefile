@@ -27,7 +27,7 @@ TARGET = $(src_dir)/osv-memcached.so
 module: $(TARGET)
 
 $(src_dir):
-	git clone $(git_url) -b $(git_tag)
+	git clone $(git_url) -b $(git_tag) && cd osv-memcached && git apply ../no_externals.patch
 
 $(TARGET): $(src_dir)
 ifeq ($(OSV_BUILD_PATH),)
