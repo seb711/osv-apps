@@ -51,7 +51,7 @@ Run another sample applications
 You need to modify cmdline field:
 
 ````
-    [user@host ~]$ ./scripts/imgedit.py setargs build/release/usr.img "--verbose --maxnic=0 /l2fwd --no-shconf -c f -n 2 --log-level 8 -m 768 -- -p 3"
+    [user@host ~]$ ./scripts/imgedit.py setargs build/release/usr.img "--verbose --maxnic=0 /l2fwd --no-shconf -c 3 -n 2 --log-level 8 -m 768 -- -p 3"
 ````
 Then you need to run VM on libvirt, following next chapter.
 
@@ -60,7 +60,33 @@ Export VM image to libvirt
 
 Packet forwarding application(such as l2fwd or l3fwd) requires multiple vNICs with multiple bridges, but run.py does not have a way to configure such network.
 
-To do so, you can export VM image to libvirt by using virt-install:
+Firstly you need to create another bridge, in the case of l2fwd, just one more extra - nic2. If you ran `./scripts/run.py -n`, it should have created a bridge named `default`. There are many ways to create a bridge (for some ideas read https://computingforgeeks.com/how-to-create-and-configure-bridge-networking-for-kvm-in-linux/), but possibly the easiest one, since we are using virsh here, is to use `virsh net-create`.
+
+Given a file `net2.xml`, that can be hand-crafted from a file exported for the default brifdge (`virsh net-dumpxml default`), one can call following commands to create a network:
+
+````
+    [user@host ~]$ cat net2.xml
+<network>
+  <name>net2</name>
+  <forward mode='nat'>
+    <nat>
+      <port start='1024' end='65535'/>
+    </nat>
+  </forward>
+  <bridge name='virbr1' stp='on' delay='0'/>
+  <ip address='192.168.123.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.123.2' end='192.168.123.254'/>
+    </dhcp>
+  </ip>
+</network>
+
+    [user@host ~]$ virsh net-create --file ./net2.xml
+````
+
+If everything has worked fine, the command `virsh net-list` should show two networks - bridges: default and net2.
+
+Secondly, you need to export VM image to libvirt by using virt-install and run it:
 
 ````
     [user@host ~]$ sudo virt-install --import --noreboot --name=osv-dpdk --ram=4096 --vcpus=2 --disk path=/home/user/.capstan/repository/osv-dpdk/osv-dpdk.qemu,bus=virtio --os-variant=none --accelerate --network=network:default,model=virtio --network=network:net2,model=virtio --serial pty --cpu host --rng=/dev/random
@@ -164,3 +190,32 @@ To do so, you can export VM image to libvirt by using virt-install:
     Total packets dropped:               0
     ====================================================
 ````
+
+Alternatively, you can run the example above without virsh, by hand-crafting a shell script that runs qemu directly.
+Firstly, you need to dump a basic command using `./scripts/run.py --dry-run -n -e '--verbose --maxnic=0 /l2fwd --no-shconf -c 3 -n 2 --log-level 8 -m 768 -- -p 3' > ./run_with_2_nics.sh` to a script `run_with_2_nics.sh` which should look like this:
+```
+/home/wkozaczuk/projects/osv-master/scripts/../scripts/imgedit.py setargs /home/wkozaczuk/projects/osv-master/build/last/usr.img "--verbose --maxnic=0 /l2fwd --no-shconf -c 3 -n 2 --log-level 8 -m 768 -- -p 3"
+qemu-system-x86_64 \
+-m 2G \
+-smp 4 \
+-vnc :1 \
+-gdb tcp::1234,server,nowait \
+-device virtio-blk-pci,id=blk0,drive=hd0,scsi=off,bootindex=0 \
+-drive file=/home/wkozaczuk/projects/osv-master/build/last/usr.img,if=none,id=hd0,cache=none,aio=native \
+-netdev bridge,id=hn0,br=virbr0,helper=/usr/lib/qemu/qemu-bridge-helper \
+-device virtio-net-pci,netdev=hn0,id=nic0 \
+-device virtio-rng-pci \
+-enable-kvm \
+-cpu host,+x2apic \
+-chardev stdio,mux=on,id=stdio,signal=off \
+-mon chardev=stdio,mode=readline \
+-device isa-serial,chardev=stdio
+```
+
+Then you need to edit the script to add 2 extra options for 2nd nic:
+```
+-netdev bridge,id=hn1,br=virbr1,helper=/usr/lib/qemu/qemu-bridge-helper \
+-device virtio-net-pci,netdev=hn1,id=nic1 \
+```
+
+and execute it.

@@ -1,0 +1,48 @@
+diff --git a/lib/librte_eal/osvapp/eal/Makefile b/lib/librte_eal/osvapp/eal/Makefile
+index 84c7a65..8ba0560 100644
+--- a/lib/librte_eal/osvapp/eal/Makefile
++++ b/lib/librte_eal/osvapp/eal/Makefile
+@@ -112,6 +112,8 @@ CFLAGS_eal_common_memory.o := -D_GNU_SOURCE
+ CFLAGS_eal_common_tailqs.o := -D_GNU_SOURCE
+ CFLAGS_eal_common_options.o := -D_GNU_SOURCE
+ 
++CXXFLAGS_eal_pci.o := -Wno-pointer-arith -DCONF_debug_memory=0
++
+ # workaround for a gcc bug with noreturn attribute
+ # http://gcc.gnu.org/bugzilla/show_bug.cgi?id=12603
+ ifeq ($(CONFIG_RTE_TOOLCHAIN_GCC),y)
+diff --git a/lib/librte_eal/osvapp/eal/eal_pci.cc b/lib/librte_eal/osvapp/eal/eal_pci.cc
+index 3facf32..0fba96c 100644
+--- a/lib/librte_eal/osvapp/eal/eal_pci.cc
++++ b/lib/librte_eal/osvapp/eal/eal_pci.cc
+@@ -64,6 +64,7 @@
+ 
+ #include <drivers/device.hh>
+ #include <drivers/pci-device.hh>
++#include <drivers/virtio-pci-device.hh>
+ 
+ /**
+  * @file
+@@ -122,7 +123,21 @@ static int
+ pci_scan_one(hw::hw_device* dev)
+ {
+ 	u8 bus, device, func;
+-	auto pci_dev = static_cast<pci::device*>(dev);
++	pci::device* pci_dev;
++
++        switch (dev->get_device_type()) {
++		case hw_device_type::pci_device:
++			pci_dev = static_cast<pci::device*>(dev);
++			break;
++
++		case hw_device_type::virtio_over_pci_device:
++			pci_dev = static_cast<virtio::virtio_pci_device*>(dev)->get_pci_device();
++			break;
++
++		default:
++			return 0;
++        }
++
+ 	auto rte_dev = new rte_pci_device();
+ 
+ 	/* get bus id, device id, function no */
