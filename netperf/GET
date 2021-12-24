@@ -14,13 +14,13 @@ cd netperf-$VERSION
 
 ./configure
 
-make
+make CFLAGS="-fcommon"
 mkdir bin
 cp src/netperf bin/
 cp src/netserver bin/
 
 make clean
-make CFLAGS="-fPIC -shared"
+make CFLAGS="-fPIC -shared -fcommon"
 mkdir osv
 cp src/netserver osv/netserver.so
 cp src/netserver ../../netserver.so
