@@ -1,0 +1,10 @@
+diff --git a/cashman/index.py b/cashman/index.py
+index 7868b9f..6e9b1a8 100644
+--- a/cashman/index.py
++++ b/cashman/index.py
+@@ -47,4 +47,4 @@ def add_expense():
+ 
+ 
+ if __name__ == "__main__":
+-    app.run()
++    app.run(host="0.0.0.0")
