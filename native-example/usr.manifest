@@ -1,1 +1,3 @@
 /hello: ${MODULE_DIR}/hello
+/hello-static-pie: ${MODULE_DIR}/hello-static-pie
+/hello-static-non-pie: ${MODULE_DIR}/hello-static-non-pie
