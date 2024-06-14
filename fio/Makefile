@@ -1,4 +1,4 @@
-VERSION=3.25
+VERSION=3.29
 configure_flags = --disable-numa --disable-rdma --disable-rados --disable-rbd \
 	--disable-http --disable-gfapi --disable-pmem --disable-shm \
 	--disable-tcmalloc
