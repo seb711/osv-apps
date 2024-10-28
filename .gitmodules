@@ -1,4 +1,4 @@
 [submodule "leanstore"]
 	path = leanstore
 	url = git@github.com:seb711/leanstore.git
-	branch = io-osv
+	branch = io-osv-opt
