@@ -2,3 +2,6 @@
 	path = leanstore
 	url = git@github.com:seb711/leanstore.git
 	branch = io-osv-opt
+[submodule "nvme-microbenchmark"]
+	path = nvme-microbenchmark
+	url = git@github.com:seb711/nvme-micro.git
