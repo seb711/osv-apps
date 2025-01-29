@@ -1,0 +1,14 @@
+/libnvme.so.1: /lib/x86_64-linux-gnu/libnvme.so.1
+/libtbb.so.12: /lib/x86_64-linux-gnu/libtbb.so.12
+/lambdamb2: ${MODULE_DIR}/lambdamb2
+/touch: /usr/bin/touch
+/ls: /usr/bin/ls
+/usr/lib/libpcre2-8.so.0: /lib/x86_64-linux-gnu/libpcre2-8.so.0
+/mkdir: /usr/bin/mkdir
+/cat: /usr/bin/cat
+
+/nvme: /usr/sbin/nvme
+# --------------------
+# Dependencies
+# --------------------
+/usr/lib/libuuid.so.1: /lib/x86_64-linux-gnu/libuuid.so.1
